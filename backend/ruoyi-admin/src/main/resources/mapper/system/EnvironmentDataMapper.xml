@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.EnvironmentDataMapper">
+    
+    <resultMap type="EnvironmentData" id="EnvironmentDataResult">
+        <result property="id"    column="id"    />
+        <result property="recordTime"    column="record_time"    />
+        <result property="indoorTemperature"    column="indoor_temperature"    />
+        <result property="indoorHumidity"    column="indoor_humidity"    />
+        <result property="illumination"    column="illumination"    />
+        <result property="co2Concentration"    column="co2_concentration"    />
+        <result property="pm25Concentration"    column="pm2_5_concentration"    />
+        <result property="pm10Concentration"    column="pm10_concentration"    />
+        <result property="formaldehydeLevel"    column="formaldehyde_level"    />
+        <result property="noiseLevel"    column="noise_level"    />
+    </resultMap>
+
+    <sql id="selectEnvironmentDataVo">
+        select id, record_time, indoor_temperature, indoor_humidity, illumination, co2_concentration, pm2_5_concentration, pm10_concentration, formaldehyde_level, noise_level from environment_data
+    </sql>
+
+    <select id="selectEnvironmentDataList" parameterType="EnvironmentData" resultMap="EnvironmentDataResult">
+        <include refid="selectEnvironmentDataVo"/>
+        <where>  
+            <if test="recordTime != null  and recordTime != ''"> and record_time = #{recordTime}</if>
+            <if test="indoorTemperature != null "> and indoor_temperature = #{indoorTemperature}</if>
+            <if test="indoorHumidity != null  and indoorHumidity != ''"> and indoor_humidity = #{indoorHumidity}</if>
+            <if test="illumination != null  and illumination != ''"> and illumination = #{illumination}</if>
+            <if test="co2Concentration != null  and co2Concentration != ''"> and co2_concentration = #{co2Concentration}</if>
+            <if test="pm25Concentration != null  and pm25Concentration != ''"> and pm2_5_concentration = #{pm25Concentration}</if>
+            <if test="pm10Concentration != null  and pm10Concentration != ''"> and pm10_concentration = #{pm10Concentration}</if>
+            <if test="formaldehydeLevel != null "> and formaldehyde_level = #{formaldehydeLevel}</if>
+            <if test="noiseLevel != null  and noiseLevel != ''"> and noise_level = #{noiseLevel}</if>
+        </where>
+    </select>
+    
+    <select id="selectEnvironmentDataById" parameterType="Long" resultMap="EnvironmentDataResult">
+        <include refid="selectEnvironmentDataVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertEnvironmentData" parameterType="EnvironmentData" useGeneratedKeys="true" keyProperty="id">
+        insert into environment_data
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="recordTime != null and recordTime != ''">record_time,</if>
+            <if test="indoorTemperature != null">indoor_temperature,</if>
+            <if test="indoorHumidity != null and indoorHumidity != ''">indoor_humidity,</if>
+            <if test="illumination != null and illumination != ''">illumination,</if>
+            <if test="co2Concentration != null and co2Concentration != ''">co2_concentration,</if>
+            <if test="pm25Concentration != null and pm25Concentration != ''">pm2_5_concentration,</if>
+            <if test="pm10Concentration != null and pm10Concentration != ''">pm10_concentration,</if>
+            <if test="formaldehydeLevel != null">formaldehyde_level,</if>
+            <if test="noiseLevel != null and noiseLevel != ''">noise_level,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="recordTime != null and recordTime != ''">#{recordTime},</if>
+            <if test="indoorTemperature != null">#{indoorTemperature},</if>
+            <if test="indoorHumidity != null and indoorHumidity != ''">#{indoorHumidity},</if>
+            <if test="illumination != null and illumination != ''">#{illumination},</if>
+            <if test="co2Concentration != null and co2Concentration != ''">#{co2Concentration},</if>
+            <if test="pm25Concentration != null and pm25Concentration != ''">#{pm25Concentration},</if>
+            <if test="pm10Concentration != null and pm10Concentration != ''">#{pm10Concentration},</if>
+            <if test="formaldehydeLevel != null">#{formaldehydeLevel},</if>
+            <if test="noiseLevel != null and noiseLevel != ''">#{noiseLevel},</if>
+         </trim>
+    </insert>
+
+    <update id="updateEnvironmentData" parameterType="EnvironmentData">
+        update environment_data
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="recordTime != null and recordTime != ''">record_time = #{recordTime},</if>
+            <if test="indoorTemperature != null">indoor_temperature = #{indoorTemperature},</if>
+            <if test="indoorHumidity != null and indoorHumidity != ''">indoor_humidity = #{indoorHumidity},</if>
+            <if test="illumination != null and illumination != ''">illumination = #{illumination},</if>
+            <if test="co2Concentration != null and co2Concentration != ''">co2_concentration = #{co2Concentration},</if>
+            <if test="pm25Concentration != null and pm25Concentration != ''">pm2_5_concentration = #{pm25Concentration},</if>
+            <if test="pm10Concentration != null and pm10Concentration != ''">pm10_concentration = #{pm10Concentration},</if>
+            <if test="formaldehydeLevel != null">formaldehyde_level = #{formaldehydeLevel},</if>
+            <if test="noiseLevel != null and noiseLevel != ''">noise_level = #{noiseLevel},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteEnvironmentDataById" parameterType="Long">
+        delete from environment_data where id = #{id}
+    </delete>
+
+    <delete id="deleteEnvironmentDataByIds" parameterType="String">
+        delete from environment_data where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

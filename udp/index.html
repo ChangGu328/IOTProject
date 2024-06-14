@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>数据可视化</title>
+    <!-- Vue.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <!-- 引入 Echarts 5 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <!-- 引入 dataZoom 扩展 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/lib/extension/dataZoom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        #chart-container {
+            background-image: url(./bg.jpg);
+            background-repeat: no-repeat;
+            background-size: cover;
+            width: 100%;
+
+            backdrop-filter: blur(10px);
+            /* 设置元素整体透明度，值范围0-1 */
+            /* opacity: 0.5; */
+
+        }
+
+        body {
+            margin: 0;
+        }
+    </style>
+    <script>
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var currentTime = new Date();
+
+            // 格式化时间，这里以"年-月-日 时:分:秒"为例
+            var formattedTime = currentTime.toLocaleString();
+
+            // 找到ID为'time'的元素并设置其内容为当前时间
+            document.querySelector('#time').innerText = formattedTime;
+
+            function updateTime () {
+                // 获取当前时间并格式化
+                var currentTime = new Date();
+                var formattedTime = currentTime.toLocaleString();
+
+                // 更新ID为'time'的元素的内容
+                document.querySelector('#time').innerText = formattedTime;
+            }
+
+            // 初始显示时间
+            updateTime();
+
+            // 每隔1000毫秒（即1秒）调用一次updateTime函数
+            setInterval(updateTime, 1000);
+            // 上述获取及设置时间的代码
+        });
+
+
+    </script>
+</head>
+
+<body>
+    <div
+        id="chart-container"
+        style=" min-height: 100vh;"
+    >
+        <div style="text-align: center;">
+            <h1 style="margin-top:0;">JAVA基于UDP的物联网数据模拟与可视化</h1>
+            <h2 id="time"></h2>
+        </div>
+        <div
+            id="pm"
+            style="width: 80%;height: 65vh;margin:auto;"
+        ></div>
+        <div
+            id="air"
+            style="width: 80%;height: 65vh;margin:auto;"
+        ></div>
+        <div style="display: flex;flex-wrap: wrap;margin-top:50px;width: 80%;margin:auto">
+            <div
+                id="th"
+                style="width: 50%;height: 50vh;"
+            ></div>
+            <div
+                id="extra"
+                style="width: 50%;height: 50vh;"
+            ></div>
+        </div>
+
+
+    </div>
+    <script>
+        // Vue instance
+        new Vue({
+            el: '#chart-container',
+            data: {
+            },
+            methods: {
+                async initChart () {
+                    const response = await axios.post('http://127.0.0.1/system/data/list');
+                    // console.log('🚀 ~ index.html-54 ~ response:', response.data.rows)
+                    const data = response.data.rows
+                    console.log('🚀 ~ index.html-53 ~ data[0]:', data[0])
+                    const dates = data.map(item => item.recordTime);
+                    const temperatureList = data.map(item => item.indoorTemperature);
+                    const humidityList = data.map(item => item.indoorHumidity);
+                    const lightIntensityList = data.map(item => item.illumination);
+                    const co2LevelList = data.map(item => item.co2Concentration);
+                    const pm25ConcentrationList = data.map(item => item.pm25Concentration);
+                    const pm10ConcentrationList = data.map(item => item.pm10Concentration);
+                    const formaldehydeLevelList = data.map(item => item.formaldehydeLevel);
+                    const noiseLevelList = data.map(item => item.noiseLevel);
+
+
+                    this.handleTH(dates, temperatureList, humidityList)
+                    this.handleAir(dates, co2LevelList, formaldehydeLevelList)
+                    this.handleExtra(dates, lightIntensityList)
+                    this.handlePM(dates, pm25ConcentrationList, pm10ConcentrationList)
+
+
+                },
+
+                handleTH (dates, v1, v2) {
+                    var chartDom = document.getElementById('th');
+                    var myChart = echarts.init(chartDom);
+                    const y1 = "温度-°C"
+                    const y2 = "湿度-%"
+                    var option = {
+                        title: {
+                            text: '空气温湿度'
+                        },
+                        tooltip: {
+                            trigger: 'axis'
+                        },
+                        legend: {
+                            data: [y1, y2]
+                        },
+                        xAxis: {
+                            data: dates
+                        },
+                        yAxis: {
+                            type: 'value',
+                        },
+                        dataZoom: [
+                            {
+                                type: 'slider',
+                                xAxisIndex: 0,
+                                filterMode: 'none',
+                                start: 0, // 同上
+                                end: 30, // 同上
+                            },
+                        ],
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataView: { show: true, readOnly: false },
+                                dataZoom: { show: true },
+                                magicType: { show: true, type: ["line", "bar"] },
+                                restore: { show: true },
+                                saveAsImage: { show: true },
+                            },
+                        },
+                        series: [{
+                            name: y1,
+                            type: 'line', smooth: true,
+                            data: v1,
+                            color: '#d23918'
+
+                        },
+                        {
+                            name: y2,
+                            type: 'line', smooth: true,
+                            data: v2,
+                            color: '#3271ae'
+                        }]
+                    };
+
+                    // 配置图表选项
+                    myChart.setOption(option)
+                },
+
+
+                countItems (arr) {
+                    let counts = {};
+                    arr.forEach(item => {
+                        counts[item] = (counts[item] || 0) + 1;
+                    });
+
+                    return Object.entries(counts).map(([name, value]) => ({ value, name }));
+                },
+
+                handleAir (dates, v1, v2) {
+                    var chartDom = document.getElementById('air');
+                    var myChart = echarts.init(chartDom);
+                    const y1 = "CO2浓度-ppm"
+                    const y2 = "甲醛浓度-ppm-0.1mg/m3"
+                    v2 = v2.map(item => item * 1000)
+                    var option = {
+                        title: {
+                            text: '空气质量'
+                        },
+                        tooltip: {
+                            trigger: 'axis'
+                        },
+                        legend: {
+                            data: [y1, y2]
+                        },
+                        xAxis: {
+                            data: dates
+                        },
+                        yAxis: {
+                            type: 'value',
+                        },
+                        dataZoom: [
+                            {
+                                type: 'slider',
+                                xAxisIndex: 0,
+                                filterMode: 'none',
+                                start: 0, // 同上
+                                end: 30, // 同上
+                            },
+                        ],
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataView: { show: true, readOnly: false },
+                                dataZoom: { show: true },
+                                magicType: { show: true, type: ["line", "bar"] },
+                                restore: { show: true },
+                                saveAsImage: { show: true },
+                            },
+                        },
+                        series: [{
+                            name: y1,
+                            type: 'line', smooth: true,
+                            data: v1,
+                            color: '#d23918'
+
+                        },
+                        {
+                            name: y2,
+                            type: 'line', smooth: true,
+                            data: v2,
+                            color: '#3271ae'
+                        }]
+                    };
+
+                    // 配置图表选项
+                    myChart.setOption(option)
+                },
+
+
+                countItems (arr) {
+                    let counts = {};
+                    arr.forEach(item => {
+                        counts[item] = (counts[item] || 0) + 1;
+                    });
+
+                    return Object.entries(counts).map(([name, value]) => ({ value, name }));
+                },
+
+
+
+
+                handleExtra (dates, v1) {
+                    var chartDom = document.getElementById('extra');
+                    var myChart = echarts.init(chartDom);
+                    const y1 = "光强-1000lux"
+
+                    var option = {
+                        title: {
+                            text: '环境光'
+                        },
+                        tooltip: {
+                            trigger: 'axis'
+                        },
+                        legend: {
+                            data: [y1]
+                        },
+                        xAxis: {
+                            data: dates
+                        },
+                        yAxis: {
+                            type: 'value',
+                        },
+                        dataZoom: [
+                            {
+                                type: 'slider',
+                                xAxisIndex: 0,
+                                filterMode: 'none',
+                                start: 0, // 同上
+                                end: 30, // 同上
+                            },
+                        ],
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataView: { show: true, readOnly: false },
+                                dataZoom: { show: true },
+                                magicType: { show: true, type: ["line", "bar"] },
+                                restore: { show: true },
+                                saveAsImage: { show: true },
+                            },
+                        },
+                        series: [{
+                            name: y1,
+                            type: 'line', smooth: true,
+                            data: v1,
+                            color: '#d23918'
+
+                        },
+                        ]
+                    };
+
+                    // 配置图表选项
+                    myChart.setOption(option)
+                },
+                handlePM (dates, v1, v2) {
+                    var chartDom = document.getElementById('pm');
+                    var myChart = echarts.init(chartDom);
+                    const y1 = "PM2.5"
+                    const y2 = "PM10"
+                    var option = {
+                        title: {
+                            text: 'PM检测'
+                        },
+                        tooltip: {
+                            trigger: 'axis'
+                        },
+                        legend: {
+                            data: [y1, y2]
+                        },
+                        xAxis: {
+                            data: dates
+                        },
+                        yAxis: {
+                            type: 'value',
+                        },
+                        dataZoom: [
+                            {
+                                type: 'slider',
+                                xAxisIndex: 0,
+                                filterMode: 'none',
+                                start: 0, // 同上
+                                end: 30, // 同上
+                            },
+                        ],
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataView: { show: true, readOnly: false },
+                                dataZoom: { show: true },
+                                magicType: { show: true, type: ["line", "bar"] },
+                                restore: { show: true },
+                                saveAsImage: { show: true },
+                            },
+                        },
+                        series: [{
+                            name: y1,
+                            type: 'line', smooth: true,
+                            data: v1,
+                            color: '#d23918'
+
+                        },
+                        {
+                            name: y2,
+                            type: 'line', smooth: true,
+                            data: v2,
+                            color: '#3271ae'
+                        }]
+                    };
+
+                    // 配置图表选项
+                    myChart.setOption(option)
+                },
+            },
+            mounted () {
+                this.initChart();
+            },
+        });
+    </script>
+</body>
+
+</html>
